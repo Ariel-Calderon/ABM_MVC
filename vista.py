@@ -1,101 +1,7 @@
-from cProfile import label
-from pickle import FALSE
 import tkinter as tk
 from tkinter import Menu, messagebox
 from tkinter import ttk
-import logica
 
-from setuptools import Command
-
-
-class App(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Gestión de Precios para Qendra")
-        self.geometry("800x600")
-        self.crear_menu()
-
-    def crear_menu(self):
-        menu_principal = Menu(self)
-        self.config(menu=menu_principal)
-
-        menu_archivo = Menu(menu_principal, tearoff=0)
-        menu_principal.add_cascade(label="Archivo", menu=menu_archivo)
-        menu_archivo.add_command(label="Cargar Archivo CSV", command=self.cargar_archivo)
-        menu_archivo.add_command(label="Generar Archivo CSV", command=self.generar_archivo)
-        menu_archivo.add_command(label="Salir", command=self.quit)
-
-
-        menu_productos = Menu(menu_principal, tearoff=0)
-        menu_principal.add_cascade(label="Productos", menu=menu_productos)
-        menu_productos.add_command(label="Listar Productos", command=self.listar_productos)
-        menu_productos.add_command(label="Cargar Producto", command=self.cargar_producto)
-        menu_productos.add_command(label="Borrar Producto", command=self.borrar_producto)
-        menu_productos.add_command(label="Modificar Producto", command=self.modificar_producto)
-
-        menu_secciones = Menu(menu_principal, tearoff=0)
-        menu_principal.add_cascade(label="Secciones", menu=menu_secciones)
-        menu_secciones.add_command(label="Listar Secciones",command=self.listar_secciones)
-        menu_secciones.add_command(label="Cargar Secciones",command=self.cargar_secciones)
-        menu_secciones.add_command(label="Borrar Secciones",command=self.borrar_secciones)
-        menu_secciones.add_command(label="Modificar Secciones",command=self.modificar_secciones)
-
-        menu_proveedores = Menu(menu_principal, tearoff=0)
-        menu_principal.add_cascade(label="Proveedores", menu=menu_proveedores)
-        menu_proveedores.add_command(label="Listar Proveedores",command=self.listar_proveedores)
-        menu_proveedores.add_command(label="Cargar Proveedores",command=self.cargar_proveedores)
-        menu_proveedores.add_command(label="Borrar Proveedores",command=self.borrar_proveedores)
-        menu_proveedores.add_command(label="Modificar Proveedores",command=self.modificar_proveedores)
-
-        menu_gestion = Menu(menu_principal, tearoff=0)
-        menu_principal.add_cascade(label="Gestión de Precios", menu=menu_gestion)
-        
-
-    def cargar_archivo(self):
-        pass
-
-    def generar_archivo(self):
-        pass
-
-    def listar_productos(self):
-        pass
-
-    def cargar_producto(self):
-        formulario= PlantillaProducto(self,"Cargar nuevo producto")
-        formulario.grab_set()
-
-    def borrar_producto(self):
-        pass
-
-    def modificar_producto(self):
-        formulario = PlantillaProducto(self,"Modificar un producto","modificar")
-        formulario.grab_set()
-
-    def listar_secciones(self):
-        pass
-
-    def cargar_secciones(self):
-        formulario=PlantillaSeccion(self,"Cargar nueva sección")
-        formulario.grab_set()
-
-    def borrar_secciones(self):
-        pass
-
-    def modificar_secciones(self):
-        formulario=PlantillaSeccion(self,"Modificar una Sección","modificar")
-        formulario.grab_set()
-
-    def listar_proveedores(self):
-        pass
-    
-    def cargar_proveedores(self):
-        pass
-
-    def borrar_proveedores(self):
-        pass
-
-    def modificar_proveedores(self):
-        pass
 
 
 
@@ -271,13 +177,14 @@ class Plantilla(tk.Toplevel):
             parametros = self.clase_objeto.ver_parametros()
             tabla = parametros[0]
             campo_clave = parametros[1]
+            modulo = parametros[2]
 
             es_clave = (campo_clave==nombre_campo)
             if self.modo != "guardar" or not es_clave:                
                 if es_clave:
-                    lista_clase = getattr(logica, "Lista" + tabla)
+                    lista_clase = getattr(modulo, "Lista" + tabla)
                 else:
-                    lista_clase = getattr(logica, "Lista" + nombre_campo)
+                    lista_clase = getattr(modulo, "Lista" + nombre_campo)
                 lista_objeto=lista_clase()
                 lista_mostrar= lista_objeto.listar_columnas([campo_para_mostrar])
                 lista_guardar=lista_objeto.listar_columnas([campo_para_guardar])
@@ -327,48 +234,3 @@ class Plantilla(tk.Toplevel):
 
 
 
-
-
-
-
-
-
-
-
-class PlantillaProducto(Plantilla):
-    
-
-    def __init__(self, parent,titulo,modo="guardar"):
-        super().__init__(parent,logica.Producto,modo)
-        self.title(titulo)
-        self.geometry("400x300")   
-
-        self.crear_combobox(True,"Sección","Secciones")
-        self.crear_entry(True,"Código de PLU","codigo_de_PLU","enteros")
-        self.crear_entry(True, "Descripción","descripcion")
-
-        self.render_formulario_ABM()  
-            
-
-
-   
-
-class PlantillaSeccion(Plantilla):
-
-    def __init__(self, parent,titulo,modo="guardar"):
-        super().__init__(parent,logica.Seccion,modo)
-        self.title(titulo)
-        self.geometry("400x300")     
-
-        self.crear_combobox(False,"Sección","id") #no es obligatorio cuando el id es autoincrement en la base
-        self.crear_entry(True,"Descripción", "descripcion")
-        self.crear_entry(False,"Porcentaje de Ganancia", "porcentaje_ganancia","decimales")
-
-        self.render_formulario_ABM()
-
-            
-
-
-if __name__ == "__main__":
-    app = App()
-    app.mainloop()
