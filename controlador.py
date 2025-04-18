@@ -172,6 +172,7 @@ class Entidad:
             Any: Valor del atributo en cuestión.
         """
         return getattr(self,campo)
+    
         
             
 
