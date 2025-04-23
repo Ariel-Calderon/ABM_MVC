@@ -1,4 +1,5 @@
 from .modelo import Modelo
+import csv
 
 base_ubicacion = ""
 
@@ -180,23 +181,38 @@ class Lista:
     """SúperClase que crea, contiene y gestiona una lista de objetos.
 
     Attributes:
-        lista(Object): La lista de objetos propiamente dicha.
+        clase_principal (Class): Clase de objetos que contendrá la lista.
+        lista(List[object]): La lista de objetos propiamente dicha.
     """
-    def __init__(self,tabla,clase_objeto,condicion=None,valores=None):
-        """Crea una lista de objetos.
+    def __init__(self,condicion=None,valores=None,lista_con_encabezado=None): #tabla,
+        """Crea una lista de objetos de la misma clase, obteniendo los valores de la base de datos o de una lista ingresada como argumento.
+        En caso de crearse una instancia sólo especificando la clase, la lista contendrá todos los registros/objetos de la tabla correspondiente a la clase consignada.
+        Si se especifican condiciones y sus respectivos valores, se filtrará la lista obtenida de la base de acuerdo a eso.
+        En caso de utilizarse una lista con los valores se constuirá una lista de objetos con esos valores.
+
 
         Args:
-            tabla (str): Nombre de la tabla de la base de datos desde donde se obtendran los valores.
-            clase_objeto (Class): Clase de objetos que contendrá la lista. 
+            clase_principal (Class): Clase de objetos que contendrá la lista. 
             condicion (str, optional): Condición para filtrar registros, ej. "campo1 > ? AND campo2 < ?". Defaults to None.
             valores (List | Tuple, optional): Los valores para la condición, continuando con el ejemplo anterior podría ser: (100,200). Defaults to None.
+            lista_con_encabezado(List[List[Any]]): Lista que contiene las líneas con los valores para los objetos, la primera línea debe contener los nombres de los campos/columnas de acuerdo a la respectiva tabla de la base.
         """
-        self.base = Modelo(base_ubicacion)
-        matriz = self.base.seleccionar(tabla,"*",condicion,valores)
-        campos = self.base.obtener_campos(tabla)
+        self.clase_principal= self.__class__.clase_principal
         self.lista = []
-        for registro in matriz:
-            self.lista.append(clase_objeto(lista_de_campos=campos,lista_de_valores=registro))
+        if lista_con_encabezado is None:
+            tabla = self.clase_principal.ver_parametros()[0]
+            self.base = Modelo(base_ubicacion)
+            matriz = self.base.seleccionar(tabla,"*",condicion,valores)
+            campos = self.base.obtener_campos(tabla)            
+            for registro in matriz:
+                self.lista.append(self.clase_principal(lista_de_campos=campos,lista_de_valores=registro))
+        else:
+            campos = lista_con_encabezado.pop(0)
+            print(campos)
+            for linea in lista_con_encabezado:
+                print (linea)
+                self.lista.append(self.clase_principal(lista_de_campos=campos,lista_de_valores=linea))
+                
 
     def listar_columnas(self,columnas):
         """Devuelve una lista con la/s columna/s solicitada/s.
@@ -217,4 +233,51 @@ class Lista:
                 valor = getattr(linea, columnas[0],None)
             valores.append(valor)        
         return valores
+    
+    def guardar(self):
+        """Hace un insert en la base de datos de los objetos de la lista.
+
+        Returns:
+            Tuple(List[bool, str, Any]): Lista que contiene una lista por cada línea que se intentó guardar [True, mensaje, número de registro] en caso de éxito y [False, mensaje] en caso contrario.
+        """
+        tupla_resultados = []
+        for elemento in self.lista:
+            tupla_resultados.append(elemento.guardar())
+        return tupla_resultados
+    
+    def modificar(self):
+        """Hace un update en la base de datos de los registros representados en los objetos de la lista.
+
+        Returns:
+           Tuple(int,int): Tupla con la cantidad de registros modificados y la cantidad de registros que se intentó modificar.
+        """
+        registros_modificados = 0
+        for elemento in self.lista:
+            registros_modificados += elemento.modificar() or 0 #modificar() devuelve 1 o None
+        return registros_modificados,len(self.lista)
+    
+
+
+
+class Operacion:    
+    def __init__(self, clase_principal):
+        self.clase_principal = clase_principal
+
+    def abrir_archivo_csv(self, ruta_archivo, delimitador=','):
+        try:
+            with open(ruta_archivo, mode='r', encoding='utf-8') as archivo:
+                lector_csv = csv.reader(archivo, delimiter= delimitador)  
+                self.lista_contenido = [fila for fila in lector_csv]                
+        except FileNotFoundError:
+            print(f"Error: El archivo '{ruta_archivo}' no fue encontrado.")
+        except Exception as e:
+            print(f"Ocurrió un error al abrir el archivo: {e}")
+
+    def crear_lista_de_objetos(self, campos = None):
+        if campos is not None:
+                self.lista_contenido.insert(0,campos) #agrego encabezados en la primera línea de la lista.
+        self.lista_objetos = self.clase_principal(lista_con_encabezado=self.lista_contenido)
+
+    def guardar_lista_de_objetos(self):
+        return self.lista_objetos.guardar()
 

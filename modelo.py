@@ -61,9 +61,9 @@ class Modelo:
             esquema (str): Esquema de la tabla en formato SQL (ej. "id INTEGER PRIMARY KEY, nombre TEXT").
         
         Returns:
-        int | None: 
-            - Un entero indicando el resultado de la consulta (generalmente -1 para CREATE TABLE en SQLite).
-            - None si ocurre un error durante la ejecución.
+            int | None: 
+                - Un entero indicando el resultado de la consulta (generalmente -1 para CREATE TABLE en SQLite).
+                - None si ocurre un error durante la ejecución.
         """
         query = f"CREATE TABLE IF NOT EXISTS {tabla} ({esquema})"
         return self.ejecutar_consulta(query)

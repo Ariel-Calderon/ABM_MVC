@@ -100,7 +100,7 @@ class Plantilla(tk.Toplevel):
 
         Args:
             titulo (str): Título de la ventana.
-            mensaje (str): Mensajé que se mostrará.
+            mensaje (str): Mensaje que se mostrará.
             duracion (int, optional): Tiempo de duración de la ventana, expresado en milisegundos. Defaults to 2000.
         """
         ventana_emergente = tk.Toplevel()
@@ -284,6 +284,7 @@ class Plantilla(tk.Toplevel):
                 lista_clase = getattr(modulo, "Lista" + tabla)
             else:
                 lista_clase = getattr(modulo, "Lista" + nombre_campo)
+            print(lista_clase)
             lista_objeto=lista_clase()
             lista_mostrar= lista_objeto.listar_columnas([campo_para_mostrar])
             lista_guardar=lista_objeto.listar_columnas([campo_para_guardar])
@@ -328,10 +329,4 @@ class Plantilla(tk.Toplevel):
         else:
             tk.Button(self, text="Modificar", command=self.modificar).grid(row=fila, column=0, columnspan=2, pady=20)
             self.switch_widgets()
-        
-
-
-
-
-
-
+            
