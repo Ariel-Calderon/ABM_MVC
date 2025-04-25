@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import Menu, messagebox
 from tkinter import ttk
+import ABM_MVC.controlador as controlador
 
 
 
@@ -275,15 +276,14 @@ class Plantilla(tk.Toplevel):
         """
         parametros = self.clase_objeto.ver_parametros()
         tabla = parametros[0]
-        campo_clave = parametros[1]
-        modulo = parametros[2]
+        campo_clave = parametros[1]        
 
         es_clave = (campo_clave==nombre_campo)
         if self.modo != "guardar" or not es_clave:                
             if es_clave:
-                lista_clase = getattr(modulo, "Lista" + tabla)
+                lista_clase = getattr(controlador, "Lista" + tabla)
             else:
-                lista_clase = getattr(modulo, "Lista" + nombre_campo)
+                lista_clase = getattr(controlador, "Lista" + nombre_campo)
             print(lista_clase)
             lista_objeto=lista_clase()
             lista_mostrar= lista_objeto.listar_columnas([campo_para_mostrar])

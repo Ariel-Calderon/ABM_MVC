@@ -7,6 +7,13 @@ def pasar_ubicacion_db(ubicacion:str):
     global base_ubicacion
     base_ubicacion = ubicacion
 
+def registrar_entidades(lista_de_entidades:list):
+    for entidad in lista_de_entidades:
+        tabla = entidad.ver_parametros()[0]
+        nombre_clase = f"Lista{tabla}"
+        nueva_clase = type(nombre_clase, (Lista,), {"clase_principal" : entidad})
+        globals()[nombre_clase] = nueva_clase
+        print(f"Clase creada: {nombre_clase}, Módulo: {nueva_clase.__module__}")
 
 
 class Entidad:
@@ -62,22 +69,21 @@ class Entidad:
         Método de clase que devuelve información sobre la clase para ser usada en una capa superior.
 
         Returns:
-            List[str,str,module]: Lista que contiene el nombre de la tabla, el nombre del campo clave y el módulo donde se encuentra la clase concreta utilizada.
-        """
-        print (cls.tabla)
-        print (cls.campo_clave)       
-        return [cls.tabla,cls.campo_clave,cls.modulo_ubicacion]
+            List[str,str]: Lista que contiene el nombre de la tabla y el nombre del campo clave.
+        """              
+        return [cls.tabla,cls.campo_clave]
     
+    """
     @classmethod
     def pasar_ubicacion_modulo(cls, modulo):
-        """
+       
         Asigna un valor al atributo de clase modulo_ubicacion, que indica en que módulo se tienen que buscar las clases herederas.
 
         Args:
             modulo (module): Consiste en el módulo donde se encuentran definidas las clases herederas de la presente SúperClase
-        """
+        
         cls.modulo_ubicacion = modulo
-
+    """
     def borrar(self):
         """Elimina el registro de la base de datos correspondiente al objeto.
         """
