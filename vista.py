@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import Menu, messagebox
-from tkinter import ttk
+from tkinter import ttk, filedialog
 import ABM_MVC.controlador as controlador
 
 
@@ -306,6 +306,25 @@ class Plantilla(tk.Toplevel):
                 self.campos_obligatorios.append(combobox)
 
             self.lista_de_widgets.append([etiqueta,combobox,es_clave])
+
+    def seleccionar_archivo(self):
+        file_path = filedialog.askopenfilename(
+            title="Seleccione un archivo",
+            #filetypes=(("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*"))
+        )
+        if file_path:
+            #self.etiqueta_archivo.config(text=f"Archivo seleccionado:\n{file_path}")
+            nuevo_archivo_CSV = controlador.ArchivoCsv(self.clase_objeto)
+            nuevo_archivo_CSV.abrir_archivo(file_path)
+            nuevo_archivo_CSV.crear_lista_de_objetos()
+            nuevo_archivo_CSV.guardar_lista_de_objetos()
+
+
+    def render_formulario_CSV(self):
+        file_button = tk.Button(self, text="Seleccionar archivo", command=self.seleccionar_archivo)
+        file_button.pack(pady=10)
+        self.etiqueta_archivo = tk.Label(self, text="No se ha seleccionado ningún archivo")
+        self.etiqueta_archivo.pack(pady=10)
 
 
     

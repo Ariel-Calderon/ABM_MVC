@@ -12,7 +12,7 @@ def registrar_entidades(lista_de_entidades:list):
         tabla = entidad.ver_parametros()[0]
         nombre_clase = f"Lista{tabla}"
         nueva_clase = type(nombre_clase, (Lista,), {"clase_principal" : entidad})
-        globals()[nombre_clase] = nueva_clase
+        globals()[nombre_clase] = nueva_clase #VERIFICAR SI REALMENTE ES NECESARIO REGISTRARLA EN GLOBALS
         print(f"Clase creada: {nombre_clase}, Módulo: {nueva_clase.__module__}")
 
 
@@ -265,11 +265,11 @@ class Lista:
 
 
 
-class Operacion:    
+class ArchivoCsv:    
     def __init__(self, clase_principal):
         self.clase_principal = clase_principal
 
-    def abrir_archivo_csv(self, ruta_archivo, delimitador=','):
+    def abrir_archivo(self, ruta_archivo, delimitador=','):
         try:
             with open(ruta_archivo, mode='r', encoding='utf-8') as archivo:
                 lector_csv = csv.reader(archivo, delimiter= delimitador)  
@@ -282,7 +282,12 @@ class Operacion:
     def crear_lista_de_objetos(self, campos = None):
         if campos is not None:
                 self.lista_contenido.insert(0,campos) #agrego encabezados en la primera línea de la lista.
-        self.lista_objetos = self.clase_principal(lista_con_encabezado=self.lista_contenido)
+        tabla = self.clase_principal.ver_parametros()[0]
+        clase_lista_string = f"Lista{tabla}"
+        clase_lista = globals()[clase_lista_string]
+        self.lista_objetos = clase_lista(lista_con_encabezado=self.lista_contenido)
+        
+        
 
     def guardar_lista_de_objetos(self):
         return self.lista_objetos.guardar()
