@@ -7,8 +7,8 @@ import ABM_MVC.controlador as controlador
 
 
 
-class Plantilla(tk.Toplevel):
-    """Clase heredera de tk.Toplevel y SúperClase de las diferentes vistas que gestionarán las operaciones entre la vista del usuario y el controlador.
+class Formulario_ABM(tk.Toplevel):
+    """Clase heredera de tk.Toplevel y SúperClase de las diferentes vistas que gestionarán las Altas, Bajas y Modificaciones con el controlador.
 
     Args:
         tk (object): Objeto de tkinter.
@@ -23,7 +23,7 @@ class Plantilla(tk.Toplevel):
             validacion_enteros(Tuple[Callable, str]):Tupla que contiene una función de validación para números enteros y un patrón de formato asociado ('%P').
     """
 
-    def __init__(self,parent,clase_objeto,modo):
+    def __init__(self,parent,clase_objeto,modo="guardar"):
         """Construye una instancia de clase donde se definen los atributos necesarios para que puedan construirse y gestionarse los los widgets.
 
         Args:
@@ -117,7 +117,7 @@ class Plantilla(tk.Toplevel):
         ventana_emergente.after(duracion, ventana_emergente.destroy)
 
     def reset_formulario(self):
-        """Pone en blanco todos los widgets.
+        """Borra el contenido de todos los widgets.
         """
         for widget in self.winfo_children():
             print(f"Widget detectado: {widget}, Tipo: {type(widget)}")            
@@ -315,9 +315,8 @@ class Plantilla(tk.Toplevel):
         if file_path:
             #self.etiqueta_archivo.config(text=f"Archivo seleccionado:\n{file_path}")
             nuevo_archivo_CSV = controlador.ArchivoCsv(self.clase_objeto)
-            nuevo_archivo_CSV.abrir_archivo(file_path)
-            nuevo_archivo_CSV.crear_lista_de_objetos()
-            nuevo_archivo_CSV.guardar_lista_de_objetos()
+            nuevo_archivo_CSV.cargar_archivo(file_path)            
+            nuevo_archivo_CSV.guardar()
 
 
     def render_formulario_CSV(self):
@@ -348,4 +347,68 @@ class Plantilla(tk.Toplevel):
         else:
             tk.Button(self, text="Modificar", command=self.modificar).grid(row=fila, column=0, columnspan=2, pady=20)
             self.switch_widgets()
+
+
+
+class Formulario_CSV(tk.Toplevel):
+    def __init__(self,parent,clase_objeto,modo="cargar"):
+        super().__init__(parent)
+        self.clase_objeto= clase_objeto
+        self.mensaje_confirmacion_carga = "Estás por guardar los siguientes datos:\n"
+        if modo == "cargar":
+            file_button = tk.Button(self, text="Seleccionar archivo", command=self.cargar_y_guardar)
+            file_button.pack(pady=10)
+            self.etiqueta_archivo = tk.Label(self, text="No se ha seleccionado ningún archivo")
+            self.etiqueta_archivo.pack(pady=10)
+
+    def cargar_y_guardar(self):
+        file_path = filedialog.askopenfilename(
+            title="Seleccione un archivo",
+            #filetypes=(("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*"))
+        )
+        if file_path:
+            #self.etiqueta_archivo.config(text=f"Archivo seleccionado:\n{file_path}")
+            self.nuevo_objeto_CSV = controlador.ObjetoCsv(self.clase_objeto) 
+            self.nuevo_objeto_CSV.cargar_archivo(file_path)
+            mensaje = self.mensaje_confirmacion_carga            
+            for linea in self.nuevo_objeto_CSV.listar_datos(True):
+                mensaje += f"{linea}\n"
+           # respuesta = messagebox.askokcancel("Cargar",mensaje)
+            respuesta = self.mostrar_ventana_con_lista("¿Confirma la carga en la Base de los siguientes registros")
+            print(respuesta)
+            if respuesta:
+               self.nuevo_objeto_CSV.guardar()
+
+    def mostrar_ventana_con_lista(self,mensaje):
+        ventana = tk.Toplevel(self)
+        ventana.title("Lista de registros")
+        ventana.geometry("400x300")
+        mensaje += "\n\n"
+        lista = self.nuevo_objeto_CSV.listar_datos(True)
+        for linea in lista:
+            for elemento in linea:
+                mensaje += elemento
+            mensaje += "\n"
+        print(mensaje)
+        tk.Label(ventana,text=mensaje).pack(pady=10)
+
+        respuesta = None
+        def responder_y_destruir(aceptar=True):       
+            nonlocal respuesta
+            respuesta = aceptar
+            ventana.destroy()
             
+        tk.Button(ventana, text="Aceptar", command=responder_y_destruir ).pack(pady=10)
+        tk.Button(ventana, text="Cancelar", command=lambda: responder_y_destruir(False)).pack(pady=10)
+        
+        ventana.wait_window()
+        return respuesta
+
+
+    # poner los botones primero
+    # definir una función donde sólo le asignan una función a una variable booleana
+    # retorna la variable booleana
+
+
+
+

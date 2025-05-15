@@ -189,6 +189,7 @@ class Lista:
     Attributes:
         clase_principal (Class): Clase de objetos que contendrá la lista.
         lista(List[object]): La lista de objetos propiamente dicha.
+        matriz DEFINIRRRRR!!!!!!!
     """
     def __init__(self,condicion=None,valores=None,lista_con_encabezado=None): #tabla,
         """Crea una lista de objetos de la misma clase, obteniendo los valores de la base de datos o de una lista ingresada como argumento.
@@ -208,17 +209,20 @@ class Lista:
         if lista_con_encabezado is None:
             tabla = self.clase_principal.ver_parametros()[0]
             self.base = Modelo(base_ubicacion)
-            matriz = self.base.seleccionar(tabla,"*",condicion,valores)
-            campos = self.base.obtener_campos(tabla)            
-            for registro in matriz:
-                self.lista.append(self.clase_principal(lista_de_campos=campos,lista_de_valores=registro))
+            self.matriz = self.base.seleccionar(tabla,"*",condicion,valores)
+            self.campos = self.base.obtener_campos(tabla)      
         else:
-            campos = lista_con_encabezado.pop(0)
-            print(campos)
-            for linea in lista_con_encabezado:
-                print (linea)
-                self.lista.append(self.clase_principal(lista_de_campos=campos,lista_de_valores=linea))
-                
+            self.campos = lista_con_encabezado.pop(0)
+            self.matriz = lista_con_encabezado        
+
+        for linea in self.matriz:            
+            self.lista.append(self.clase_principal(lista_de_campos=self.campos,lista_de_valores=linea))
+
+    def listar_todo(self,encabezados = False):
+        lista_para_retornar = self.matriz.copy()
+        if encabezados:            
+            lista_para_retornar.insert(0,self.campos)        
+        return lista_para_retornar      
 
     def listar_columnas(self,columnas):
         """Devuelve una lista con la/s columna/s solicitada/s.
@@ -265,30 +269,32 @@ class Lista:
 
 
 
-class ArchivoCsv:    
+class ObjetoCsv:    
     def __init__(self, clase_principal):
         self.clase_principal = clase_principal
 
-    def abrir_archivo(self, ruta_archivo, delimitador=','):
+    def cargar_archivo(self, ruta_archivo, campos = None, delimitador=','):
         try:
             with open(ruta_archivo, mode='r', encoding='utf-8') as archivo:
                 lector_csv = csv.reader(archivo, delimiter= delimitador)  
-                self.lista_contenido = [fila for fila in lector_csv]                
+                lista_contenido = [fila for fila in lector_csv]  
+                if campos is not None:
+                    lista_contenido.insert(0,campos) #agrego encabezados en la primera línea de la lista.
+                tabla = self.clase_principal.ver_parametros()[0]
+                clase_lista_string = f"Lista{tabla}"
+                clase_lista = globals()[clase_lista_string]
+                self.lista_objetos = clase_lista(lista_con_encabezado=lista_contenido)              
         except FileNotFoundError:
             print(f"Error: El archivo '{ruta_archivo}' no fue encontrado.")
         except Exception as e:
             print(f"Ocurrió un error al abrir el archivo: {e}")
 
-    def crear_lista_de_objetos(self, campos = None):
-        if campos is not None:
-                self.lista_contenido.insert(0,campos) #agrego encabezados en la primera línea de la lista.
-        tabla = self.clase_principal.ver_parametros()[0]
-        clase_lista_string = f"Lista{tabla}"
-        clase_lista = globals()[clase_lista_string]
-        self.lista_objetos = clase_lista(lista_con_encabezado=self.lista_contenido)
-        
-        
+    def listar_datos(self,encabezados=False):
+        return self.lista_objetos.listar_todo(encabezados)
+    
+    def listar_objetos(self):
+        return self.lista_objetos
 
-    def guardar_lista_de_objetos(self):
+    def guardar(self):
         return self.lista_objetos.guardar()
 
