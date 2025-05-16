@@ -354,7 +354,7 @@ class Formulario_CSV(tk.Toplevel):
     def __init__(self,parent,clase_objeto,modo="cargar"):
         super().__init__(parent)
         self.clase_objeto= clase_objeto
-        self.mensaje_confirmacion_carga = "Estás por guardar los siguientes datos:\n"
+
         if modo == "cargar":
             file_button = tk.Button(self, text="Seleccionar archivo", command=self.cargar_y_guardar)
             file_button.pack(pady=10)
@@ -367,47 +367,65 @@ class Formulario_CSV(tk.Toplevel):
             #filetypes=(("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*"))
         )
         if file_path:
-            #self.etiqueta_archivo.config(text=f"Archivo seleccionado:\n{file_path}")
+      
             self.nuevo_objeto_CSV = controlador.ObjetoCsv(self.clase_objeto) 
             self.nuevo_objeto_CSV.cargar_archivo(file_path)
-            mensaje = self.mensaje_confirmacion_carga            
-            for linea in self.nuevo_objeto_CSV.listar_datos(True):
-                mensaje += f"{linea}\n"
-           # respuesta = messagebox.askokcancel("Cargar",mensaje)
-            respuesta = self.mostrar_ventana_con_lista("¿Confirma la carga en la Base de los siguientes registros")
+    
+            mensaje = "Estás a puntos de registrar los siguientes datos:\n\n"
+            lista = self.nuevo_objeto_CSV.listar_datos(True)
+            for linea in lista:
+                for elemento in linea:
+                    mensaje += elemento
+                mensaje += "\n"
+            print(mensaje)
+      
+            respuesta = self.mostrar_ventana_con_lista(mensaje)
             print(respuesta)
             if respuesta:
-               self.nuevo_objeto_CSV.guardar()
+               #lista = self.nuevo_objeto_CSV.listar_datos(False)       
+               resultado_guardar =  self.nuevo_objeto_CSV.guardar()    
+               mensaje = "Resultado de la acción:\n\n"             
+               i = 0
+               for registro in lista:
+                    if i == 0:
+                        for elemento in registro:
+                           mensaje += elemento
+                           guardado=""
+                           razon=""                                        
+                    else:                        
+                        for elemento in registro:
+                           mensaje += elemento                    
+                        if resultado_guardar[i-1][0]:
+                            guardado = "Guardado"
+                            razon = ""
+                        else:
+                            guardado = "No guardado"
+                            razon = resultado_guardar[i-1][1]
+                    mensaje = mensaje + guardado + razon + "\n"
+                    i += 1
+            self.mostrar_ventana_con_lista(mensaje,False)
+                
 
-    def mostrar_ventana_con_lista(self,mensaje):
+    def mostrar_ventana_con_lista(self,mensaje,aceptar_cancelar=True):
         ventana = tk.Toplevel(self)
         ventana.title("Lista de registros")
-        ventana.geometry("400x300")
-        mensaje += "\n\n"
-        lista = self.nuevo_objeto_CSV.listar_datos(True)
-        for linea in lista:
-            for elemento in linea:
-                mensaje += elemento
-            mensaje += "\n"
-        print(mensaje)
+        ventana.geometry("400x300")       
         tk.Label(ventana,text=mensaje).pack(pady=10)
 
         respuesta = None
         def responder_y_destruir(aceptar=True):       
             nonlocal respuesta
             respuesta = aceptar
-            ventana.destroy()
-            
+            ventana.destroy()        
+           
         tk.Button(ventana, text="Aceptar", command=responder_y_destruir ).pack(pady=10)
-        tk.Button(ventana, text="Cancelar", command=lambda: responder_y_destruir(False)).pack(pady=10)
+        if aceptar_cancelar:
+            tk.Button(ventana, text="Cancelar", command=lambda: responder_y_destruir(False)).pack(pady=10)
         
         ventana.wait_window()
         return respuesta
 
 
-    # poner los botones primero
-    # definir una función donde sólo le asignan una función a una variable booleana
-    # retorna la variable booleana
 
 
 
