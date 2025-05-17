@@ -370,57 +370,73 @@ class Formulario_CSV(tk.Toplevel):
       
             self.nuevo_objeto_CSV = controlador.ObjetoCsv(self.clase_objeto) 
             self.nuevo_objeto_CSV.cargar_archivo(file_path)
-    
-            mensaje = "Estás a puntos de registrar los siguientes datos:\n\n"
-            lista = self.nuevo_objeto_CSV.listar_datos(True)
-            for linea in lista:
-                for elemento in linea:
-                    mensaje += elemento
-                mensaje += "\n"
-            print(mensaje)
-      
-            respuesta = self.mostrar_ventana_con_lista(mensaje)
-            print(respuesta)
-            if respuesta:
-               #lista = self.nuevo_objeto_CSV.listar_datos(False)       
-               resultado_guardar =  self.nuevo_objeto_CSV.guardar()    
-               mensaje = "Resultado de la acción:\n\n"             
-               i = 0
+
+            titulo = "Confirmación Carga"    
+            subtitulo = "Estás a puntos de registrar los siguientes datos:"
+            lista = self.nuevo_objeto_CSV.listar_datos(True)            
+            respuesta = self.mostrar_ventana_con_lista(lista=lista,titulo=titulo,subtitulo=subtitulo)     
+            if respuesta:               
+               resultado_guardar =  self.nuevo_objeto_CSV.guardar()                          
+               i = 0               
                for registro in lista:
                     if i == 0:
-                        for elemento in registro:
-                           mensaje += elemento
-                           guardado=""
-                           razon=""                                        
-                    else:                        
-                        for elemento in registro:
-                           mensaje += elemento                    
+                        registro.append("Guardado / No Guardado")  
+                    else:                           
                         if resultado_guardar[i-1][0]:
-                            guardado = "Guardado"
-                            razon = ""
+                            guardado = "Guardado"                        
                         else:
-                            guardado = "No guardado"
-                            razon = resultado_guardar[i-1][1]
-                    mensaje = mensaje + guardado + razon + "\n"
+                            guardado = resultado_guardar[i-1][1]
+                        registro.append(guardado)                   
                     i += 1
-            self.mostrar_ventana_con_lista(mensaje,False)
+               titulo="Resultado"
+               subtitulo="Este es el resultado de la carga"
+               self.mostrar_ventana_con_lista(lista=lista,titulo=titulo,subtitulo=subtitulo,aceptar_cancelar=False)
                 
 
-    def mostrar_ventana_con_lista(self,mensaje,aceptar_cancelar=True):
+    def mostrar_ventana_con_lista(self,mensaje=None,lista=None,tiene_encabezado = True,aceptar_cancelar=True,titulo="",subtitulo=None):
         ventana = tk.Toplevel(self)
-        ventana.title("Lista de registros")
-        ventana.geometry("400x300")       
-        tk.Label(ventana,text=mensaje).pack(pady=10)
+        ventana.title(titulo)            
+        
 
-        respuesta = None
-        def responder_y_destruir(aceptar=True):       
+        if subtitulo is not None:
+            frame_subtitulo = tk.Frame(ventana)
+            frame_subtitulo.pack(pady=10)
+            tk.Label(frame_subtitulo,text=subtitulo, font=("Arial", 11, "bold")).pack(pady=10)
+        
+        frame_mensaje = tk.Frame(ventana)
+        frame_mensaje.pack(pady=10)          
+
+        if mensaje is not None:
+            tk.Label(frame_mensaje,text=mensaje).pack(pady=10)
+        else:
+            fila = 0
+            for linea in lista:
+                columna = 0
+                for elemento in linea:
+                    frame=tk.Frame(frame_mensaje)
+                    frame.grid(row=fila * 2, column=columna, padx=10, pady=10)
+                    fuente_tipo = "bold" if (fila == 0 and tiene_encabezado) else "normal"                   
+                    tk.Label(frame,text=elemento, font=("Arial", 9, fuente_tipo)).pack(pady=10)
+                    columna +=1                
+                # Agregar línea divisoria después de cada fila
+                canvas = tk.Canvas(frame_mensaje, height=1, bg="black", highlightthickness=0)
+                canvas.grid(row=fila * 2 + 1, column=0, columnspan=len(linea), sticky="we", padx=5, pady=5)
+                fila +=1
+
+        ventana.update()  # Actualiza el cálculo del tamaño
+        ventana.geometry("")
+        
+        respuesta = False
+        def responder_y_destruir(aceptar=False):       
             nonlocal respuesta
             respuesta = aceptar
-            ventana.destroy()        
-           
-        tk.Button(ventana, text="Aceptar", command=responder_y_destruir ).pack(pady=10)
+            ventana.destroy()       
+
+        frame_botones = tk.Frame(ventana)
+        frame_botones.pack(pady=10)        
+        tk.Button(frame_botones, text="Aceptar", command=lambda: responder_y_destruir(True) ).pack(side="left", padx=10)
         if aceptar_cancelar:
-            tk.Button(ventana, text="Cancelar", command=lambda: responder_y_destruir(False)).pack(pady=10)
+            tk.Button(frame_botones, text="Cancelar", command=lambda: responder_y_destruir(False)).pack(side="left", padx=10)
         
         ventana.wait_window()
         return respuesta
