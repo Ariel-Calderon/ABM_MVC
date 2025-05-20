@@ -350,18 +350,11 @@ class Formulario_ABM(tk.Toplevel):
 
 
 
-class Formulario_CSV(tk.Toplevel):
-    def __init__(self,parent,clase_objeto,modo="cargar"):
-        super().__init__(parent)
+class Formulario_CSV():
+    def __init__(self,clase_objeto,modo="cargar"): #BORRADO PARENT !!!!!
+        #super().__init__(parent)
         self.clase_objeto= clase_objeto
 
-        if modo == "cargar":
-            file_button = tk.Button(self, text="Seleccionar archivo", command=self.cargar_y_guardar)
-            file_button.pack(pady=10)
-            self.etiqueta_archivo = tk.Label(self, text="No se ha seleccionado ningún archivo")
-            self.etiqueta_archivo.pack(pady=10)
-
-    def cargar_y_guardar(self):
         file_path = filedialog.askopenfilename(
             title="Seleccione un archivo",
             #filetypes=(("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*"))
@@ -374,7 +367,7 @@ class Formulario_CSV(tk.Toplevel):
             titulo = "Confirmación Carga"    
             subtitulo = "Estás a puntos de registrar los siguientes datos:"
             lista = self.nuevo_objeto_CSV.listar_datos(True)            
-            respuesta = self.mostrar_ventana_con_lista(lista=lista,titulo=titulo,subtitulo=subtitulo)     
+            respuesta = Contenedor.crear_okcancel_personalizada(lista=lista,titulo=titulo,subtitulo=subtitulo)     
             if respuesta:               
                resultado_guardar =  self.nuevo_objeto_CSV.guardar()                          
                i = 0               
@@ -390,37 +383,43 @@ class Formulario_CSV(tk.Toplevel):
                     i += 1
                titulo="Resultado"
                subtitulo="Este es el resultado de la carga"
-               self.mostrar_ventana_con_lista(lista=lista,titulo=titulo,subtitulo=subtitulo,aceptar_cancelar=False)
+               Contenedor.crear_okcancel_personalizada(lista=lista,titulo=titulo,subtitulo=subtitulo,aceptar_cancelar=False)
                 
-
-    def mostrar_ventana_con_lista(self,mensaje=None,lista=None,tiene_encabezado = True,aceptar_cancelar=True,titulo="",subtitulo=None):
-        ventana = tk.Toplevel(self)
-        ventana.title(titulo)            
-        
+class Contenedor:
+    @classmethod
+    def crear_okcancel_personalizada(cls,mensaje=None,lista=None,tiene_encabezado = True,aceptar_cancelar=True,titulo="",subtitulo=None,scroll_vertical=True,scroll_horizontal=True):
+        ventana = tk.Toplevel() 
+        ventana.title(titulo)                    
 
         if subtitulo is not None:
             frame_subtitulo = tk.Frame(ventana)
             frame_subtitulo.pack(pady=10)
             tk.Label(frame_subtitulo,text=subtitulo, font=("Arial", 11, "bold")).pack(pady=10)
         
+        #frame para el contenido principal (mensaje o lista)
         frame_mensaje = tk.Frame(ventana)
-        frame_mensaje.pack(pady=10)          
+        frame_mensaje.pack(fill="both", expand=True)  
+
+        if scroll_horizontal or scroll_vertical:
+            frame_interno = cls.crear_frame_scrolleable(frame_mensaje,vertical=scroll_vertical,horizontal=scroll_horizontal)
+        else:
+            frame_interno = frame_mensaje
 
         if mensaje is not None:
-            tk.Label(frame_mensaje,text=mensaje).pack(pady=10)
-        else:
+            tk.Label(frame_interno,text=mensaje).pack(pady=10)
+        else:            
             fila = 0
             for linea in lista:
                 columna = 0
                 for elemento in linea:
-                    frame=tk.Frame(frame_mensaje)
+                    frame=tk.Frame(frame_interno)
                     frame.grid(row=fila * 2, column=columna, padx=10, pady=10)
                     fuente_tipo = "bold" if (fila == 0 and tiene_encabezado) else "normal"                   
                     tk.Label(frame,text=elemento, font=("Arial", 9, fuente_tipo)).pack(pady=10)
                     columna +=1                
                 # Agregar línea divisoria después de cada fila
-                canvas = tk.Canvas(frame_mensaje, height=1, bg="black", highlightthickness=0)
-                canvas.grid(row=fila * 2 + 1, column=0, columnspan=len(linea), sticky="we", padx=5, pady=5)
+                separador = ttk.Separator(frame_interno, orient= "horizontal")
+                separador.grid(row=fila * 2 + 1, column=0, columnspan=len(linea), sticky="we", padx=5, pady=5)
                 fila +=1
 
         ventana.update()  # Actualiza el cálculo del tamaño
@@ -441,8 +440,28 @@ class Formulario_CSV(tk.Toplevel):
         ventana.wait_window()
         return respuesta
 
+    @classmethod
+    def crear_frame_scrolleable(cls,frame_contenedor,vertical=True,horizontal=True):    
+        
+        canvas = tk.Canvas(frame_contenedor)
 
+        if vertical:
+            scrollbar_y = tk.Scrollbar(frame_contenedor, orient="vertical", command=canvas.yview)
+            scrollbar_y.pack(side="right", fill="y")
+            canvas.configure(yscrollcommand=scrollbar_y.set)
+        
+        if horizontal:
+            scrollbar_x = tk.Scrollbar(frame_contenedor, orient="horizontal", command=canvas.xview)        
+            scrollbar_x.pack(side="bottom", fill="x")      
+            canvas.configure(xscrollcommand=scrollbar_x.set)        
+  
+        frame_interno = tk.Frame(canvas)
+        # Agrega el marco interno al canvas
+        canvas.create_window((0, 0), window=frame_interno, anchor="nw")
+        # Configura el canvas para que se expanda para llenar el marco principal
+        canvas.pack(side="left", fill="both", expand=True)
+        # Actualiza el tamaño del marco interno
+        frame_interno.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
-
-
+        return frame_interno
 
